@@ -165,10 +165,20 @@ const AutoGeocodingPage = () => {
             const filename = file ? file.name.replace(/\.[^.]+$/, '_geocoded.kml') : undefined;
             exportToKML(results, filename);
 
-            toast({
-                title: '📥 KML exportado!',
-                description: `Arquivo pronto para Google Earth. ${stats.success} pontos incluídos.`,
-            });
+            const totalBatches = Math.ceil(results.length / 9000); // MAX_FEATURES_PER_FILE
+
+            if (totalBatches > 1) {
+                toast({
+                    title: '📥 KML exportado em múltiplos arquivos!',
+                    description: `${totalBatches} arquivos gerados (limite: 9.000 recursos/arquivo). Importe cada um separadamente no Google Earth.`,
+                    duration: 8000,
+                });
+            } else {
+                toast({
+                    title: '📥 KML exportado!',
+                    description: `Arquivo pronto para Google Earth. ${stats.success} pontos incluídos.`,
+                });
+            }
         } catch (error) {
             toast({
                 title: 'Erro ao exportar KML',
