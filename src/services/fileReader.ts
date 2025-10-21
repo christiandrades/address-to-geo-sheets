@@ -98,13 +98,10 @@ const normalizeAddresses = (rawData: any[]): AddressData[] => {
     const firstRow = rawData[0];
     const keys = Object.keys(firstRow);
 
-    console.log('📋 Colunas disponíveis no arquivo:', keys);
-
     // Mapeia possíveis nomes de colunas
     const columnMap = detectColumns(keys);
 
     console.log('✅ Colunas detectadas:', columnMap);
-    console.log('📄 Primeira linha de exemplo:', firstRow);
 
     const addresses = rawData.map((row, index) => {
         try {
@@ -123,8 +120,6 @@ const normalizeAddresses = (rawData: any[]): AddressData[] => {
                     uf: parsed.uf || '',
                     cep: parsed.cep || ''
                 };
-
-                console.log(`Endereço parseado [${index + 1}]:`, fullAddress, '→', address);
             } else {
                 // Usa colunas separadas
                 address = {
