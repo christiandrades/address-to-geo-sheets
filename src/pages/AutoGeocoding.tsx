@@ -252,14 +252,14 @@ const AutoGeocodingPage = () => {
                             </div>
                         </Card>
 
-                        <Card className="p-6 border-none shadow-accent bg-gradient-accent hover:shadow-2xl transition-shadow">
+                        <Card className="p-6 border-none shadow-brand bg-white hover:shadow-xl transition-shadow">
                             <div className="flex items-center gap-4">
-                                <div className="bg-white/30 p-3 rounded-xl backdrop-blur-sm">
-                                    <Clock className="w-7 h-7 text-accent-foreground" />
+                                <div className="bg-amber-50 p-3 rounded-xl">
+                                    <Clock className="w-7 h-7 text-amber-600" />
                                 </div>
                                 <div>
-                                    <p className="text-sm font-medium text-accent-foreground/80">Tempo Estimado</p>
-                                    <p className="text-3xl font-bold text-accent-foreground">{estimatedTime} min</p>
+                                    <p className="text-sm font-medium text-muted-foreground">Tempo Estimado</p>
+                                    <p className="text-3xl font-bold text-foreground">{estimatedTime} min</p>
                                 </div>
                             </div>
                         </Card>
@@ -429,6 +429,16 @@ const AutoGeocodingPage = () => {
                         </li>
                     </ul>
                 </Card>
+
+                {/* Footer Copyright */}
+                <div className="mt-8 text-center pb-8">
+                    <p className="text-sm text-muted-foreground">
+                        © {new Date().getFullYear()} <strong className="text-primary">Christian Andrade</strong> • GeoSaúde v2.0 • Sistema de Geocodificação Automática
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-2">
+                        Desenvolvido para processamento de grandes volumes de endereços com precisão e eficiência
+                    </p>
+                </div>
             </div>
         </div>
     );

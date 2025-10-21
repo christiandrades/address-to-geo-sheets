@@ -152,11 +152,11 @@ const detectColumns = (columns: string[]): Record<string, string> => {
 
     const patterns = {
         rua: /^(rua|logradouro|endereco|endereço|street|address)$/i,
-        numero: /^(numero|número|num|n°|number)$/i,
-        bairro: /^(bairro|neighborhood|distrito)$/i,
-        cidade: /^(cidade|municipio|município|city)$/i,
-        uf: /^(uf|estado|state)$/i,
-        cep: /^(cep|postal.*code|zip.*code)$/i
+        numero: /^(numero|número|num|n°|number|Número)$/i,
+        bairro: /^(bairro|neighborhood|distrito|Bairro)$/i,
+        cidade: /^(cidade|municipio|município|city|Município)$/i,
+        uf: /^(uf|estado|state|UF)$/i,
+        cep: /^(cep|postal.*code|zip.*code|CEP)$/i
     };
 
     columns.forEach(col => {
