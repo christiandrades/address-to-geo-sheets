@@ -108,14 +108,34 @@ const normalizeAddresses = (rawData: any[]): AddressData[] => {
 
     const addresses = rawData.map((row, index) => {
         try {
-            const address: AddressData = {
-                rua: extractValue(row, columnMap.rua) || '',
-                numero: extractValue(row, columnMap.numero) || '',
-                bairro: extractValue(row, columnMap.bairro) || '',
-                cidade: extractValue(row, columnMap.cidade) || '',
-                uf: extractValue(row, columnMap.uf) || '',
-                cep: extractValue(row, columnMap.cep) || ''
-            };
+            let address: AddressData;
+
+            // Se tem coluna de endereço completo, parseia
+            if (columnMap.endereco_completo) {
+                const fullAddress = extractValue(row, columnMap.endereco_completo);
+                const parsed = parseFullAddress(fullAddress);
+
+                address = {
+                    rua: parsed.rua || '',
+                    numero: parsed.numero || '',
+                    bairro: parsed.bairro || '',
+                    cidade: parsed.cidade || '',
+                    uf: parsed.uf || '',
+                    cep: parsed.cep || ''
+                };
+
+                console.log(`Endereço parseado [${index + 1}]:`, fullAddress, '→', address);
+            } else {
+                // Usa colunas separadas
+                address = {
+                    rua: extractValue(row, columnMap.rua) || '',
+                    numero: extractValue(row, columnMap.numero) || '',
+                    bairro: extractValue(row, columnMap.bairro) || '',
+                    cidade: extractValue(row, columnMap.cidade) || '',
+                    uf: extractValue(row, columnMap.uf) || '',
+                    cep: extractValue(row, columnMap.cep) || ''
+                };
+            }
 
             // Copia todos os outros campos
             Object.keys(row).forEach(key => {
@@ -159,7 +179,8 @@ const detectColumns = (columns: string[]): Record<string, string> => {
         bairro: /^(bairro|neighborhood|distrito|Bairro)$/i,
         cidade: /^(cidade|municipio|município|city|Município)$/i,
         uf: /^(uf|estado|state|UF)$/i,
-        cep: /^(cep|postal.*code|zip.*code|CEP)$/i
+        cep: /^(cep|postal.*code|zip.*code|CEP)$/i,
+        endereco_completo: /^(endereço|endereco|address)$/i
     };
 
     columns.forEach(col => {
@@ -173,16 +194,93 @@ const detectColumns = (columns: string[]): Record<string, string> => {
     });
 
     // Verifica se encontrou campos essenciais
-    const missingFields = Object.entries(map)
-        .filter(([key, value]) => !value && key !== 'numero') // número é opcional
-        .map(([key]) => key);
+    // Se tem endereço completo, não precisa dos outros campos
+    if (!map.endereco_completo) {
+        const missingFields = Object.entries(map)
+            .filter(([key, value]) => !value && key !== 'numero' && key !== 'endereco_completo')
+            .map(([key]) => key);
 
-    if (missingFields.length > 0) {
-        console.warn(`Atenção: Campos não detectados automaticamente: ${missingFields.join(', ')}`);
-        console.warn('Colunas disponíveis:', columns);
+        if (missingFields.length > 0) {
+            console.warn(`Atenção: Campos não detectados automaticamente: ${missingFields.join(', ')}`);
+            console.warn('Colunas disponíveis:', columns);
+        }
+    } else {
+        console.log('✅ Modo endereço completo detectado - será parseado automaticamente');
     }
 
     return map;
+};
+
+/**
+ * Parseia endereço completo em partes
+ * Formato esperado: "Rua nome, numero, bairro, cidade, UF - CEP"
+ * Exemplo: "Jurandir andré, 05, SÃO LUIZ I, Arapiraca, AL - 57301-310"
+ */
+const parseFullAddress = (fullAddress: string): Partial<AddressData> => {
+    if (!fullAddress) return {};
+
+    try {
+        // Remove "Rua" do início se existir
+        let cleaned = fullAddress.replace(/^(Rua|rua)\s+/i, '');
+
+        // Separa CEP (após o hífen no final)
+        const cepMatch = cleaned.match(/\s*-\s*(\d{5}-?\d{3})\s*$/);
+        const cep = cepMatch ? cepMatch[1].replace('-', '') : '';
+        if (cepMatch) {
+            cleaned = cleaned.replace(cepMatch[0], '');
+        }
+
+        // Separa por vírgulas
+        const parts = cleaned.split(',').map(p => p.trim());
+
+        if (parts.length >= 4) {
+            // Formato: rua, numero, bairro, cidade, UF
+            const uf = parts[parts.length - 1]; // Último: UF
+            const cidade = parts[parts.length - 2]; // Penúltimo: Cidade
+            const bairro = parts[parts.length - 3]; // Antepenúltimo: Bairro
+            const numero = parts[parts.length - 4]; // Antes do bairro: Número
+            const rua = parts.slice(0, parts.length - 4).join(', '); // Resto: Rua
+
+            return {
+                rua: rua || parts[0], // Se não tiver rua separada, pega a primeira parte
+                numero: numero || '',
+                bairro: bairro || '',
+                cidade: cidade || '',
+                uf: uf || '',
+                cep: cep || ''
+            };
+        } else if (parts.length === 3) {
+            // Formato simplificado: rua numero, bairro, cidade UF
+            return {
+                rua: parts[0] || '',
+                numero: '',
+                bairro: parts[1] || '',
+                cidade: parts[2] || '',
+                uf: '',
+                cep: cep || ''
+            };
+        }
+
+        // Se não conseguir parsear, retorna tudo como rua
+        return {
+            rua: fullAddress,
+            numero: '',
+            bairro: '',
+            cidade: 'Arapiraca',
+            uf: 'AL',
+            cep: cep || ''
+        };
+    } catch (error) {
+        console.error('Erro ao parsear endereço:', fullAddress, error);
+        return {
+            rua: fullAddress,
+            numero: '',
+            bairro: '',
+            cidade: '',
+            uf: '',
+            cep: ''
+        };
+    }
 };
 
 /**
