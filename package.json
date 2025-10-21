@@ -1,8 +1,8 @@
 {
-  "name": "geocoding-auto-here-kml",
+  "name": "geosaude",
   "private": true,
   "version": "2.0.0",
-  "description": "Sistema automático de geocodificação com HERE API e exportação KML",
+  "description": "GeoSaúde - Sistema de Geocodificação Automática com HERE API",
   "type": "module",
   "scripts": {
     "dev": "vite",

@@ -85,12 +85,12 @@ const AutoGeocodingPage = () => {
                     if (currentResult) {
                         setResults(prev => {
                             const updated = [...prev, currentResult];
-                            
+
                             // Calcula estatísticas com base nos resultados atualizados
                             const successCount = updated.filter(r => r.success).length;
                             const failedCount = updated.length - successCount;
                             setStats({ success: successCount, failed: failedCount, total });
-                            
+
                             return updated;
                         });
                     }
@@ -236,7 +236,7 @@ const AutoGeocodingPage = () => {
                     </p>
                     <div className="mt-8 inline-flex items-center gap-3 px-6 py-3 bg-white/10 backdrop-blur-md rounded-full text-sm font-medium border border-white/20">
                         <CheckCircle className="w-5 h-5 text-accent" />
-                        <span>Processamento Automático • 100% Gratuito • Resultados Instantâneos</span>
+                        <span>Processamento Automático • Resultados Instantâneos</span>
                     </div>
                 </div>
             </div>
