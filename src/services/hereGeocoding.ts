@@ -99,9 +99,19 @@ export const geocodeBatchHere = async (
 
         const addr = addresses[i];
 
+        // Debug: mostra dados extraídos
+        console.log(`[${i + 1}/${total}] Dados extraídos:`, {
+            rua: addr.rua || '(vazio)',
+            numero: addr.numero || '(vazio)',
+            bairro: addr.bairro || '(vazio)',
+            cidade: addr.cidade || '(vazio)',
+            uf: addr.uf || '(vazio)',
+            cep: addr.cep || '(vazio)'
+        });
+
         // Monta endereço completo
         const addressParts = [
-            addr.numero && addr.rua ? `${addr.numero} ${addr.rua}` : addr.rua,
+            addr.numero && addr.rua ? `${addr.rua}, ${addr.numero}` : addr.rua,
             addr.bairro,
             addr.cidade,
             addr.uf,
