@@ -82,7 +82,8 @@ export const geocodeBatchHere = async (
         cep: string;
         [key: string]: any; // Permite campos adicionais
     }>,
-    onProgress?: (current: number, total: number, currentResult?: GeocodingResult) => void
+    onProgress?: (current: number, total: number, currentResult?: GeocodingResult) => void,
+    shouldCancel?: () => boolean
 ): Promise<Array<GeocodingResult>> => {
     const results: Array<GeocodingResult> = [];
     const total = addresses.length;
@@ -90,6 +91,12 @@ export const geocodeBatchHere = async (
     console.log(`Iniciando geocodificação de ${total} endereços...`);
 
     for (let i = 0; i < addresses.length; i++) {
+        // Verifica se foi cancelado
+        if (shouldCancel && shouldCancel()) {
+            console.log(`⚠️ Geocodificação cancelada pelo usuário em ${i}/${total}`);
+            break;
+        }
+
         const addr = addresses[i];
 
         // Monta endereço completo
@@ -152,8 +159,9 @@ export const geocodeAllAutomatic = async (
         cep: string;
         [key: string]: any;
     }>,
-    onProgress?: (current: number, total: number, currentResult?: GeocodingResult) => void
+    onProgress?: (current: number, total: number, currentResult?: GeocodingResult) => void,
+    shouldCancel?: () => boolean
 ): Promise<Array<GeocodingResult>> => {
     console.log('🚀 Modo automático: processando todos os endereços...');
-    return geocodeBatchHere(addresses, onProgress);
+    return geocodeBatchHere(addresses, onProgress, shouldCancel);
 };

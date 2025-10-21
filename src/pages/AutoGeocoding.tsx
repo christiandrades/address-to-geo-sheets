@@ -16,7 +16,8 @@ import {
     XCircle,
     Clock,
     Play,
-    RotateCw
+    RotateCw,
+    StopCircle
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import * as XLSX from 'xlsx';
@@ -28,8 +29,10 @@ const AutoGeocodingPage = () => {
     const [isProcessing, setIsProcessing] = useState(false);
     const [progress, setProgress] = useState({ current: 0, total: 0 });
     const [stats, setStats] = useState({ success: 0, failed: 0, total: 0 });
+    const [isCancelled, setIsCancelled] = useState(false);
     const { toast } = useToast();
     const startTimeRef = useRef<number>(0);
+    const cancelledRef = useRef<boolean>(false);
 
     const handleFileSelect = async (selectedFile: File) => {
         try {
@@ -61,6 +64,8 @@ const AutoGeocodingPage = () => {
         if (addresses.length === 0) return;
 
         setIsProcessing(true);
+        setIsCancelled(false);
+        cancelledRef.current = false;
         setProgress({ current: 0, total: addresses.length });
         startTimeRef.current = Date.now();
 
@@ -80,13 +85,19 @@ const AutoGeocodingPage = () => {
                     const failedCount = current - successCount;
                     setStats({ success: successCount, failed: failedCount, total });
 
+                    // Atualiza resultados parciais durante o processamento
+                    if (currentResult) {
+                        setResults(prev => [...prev, currentResult]);
+                    }
+
                     // Log a cada 10 endereços
                     if (current % 10 === 0) {
                         const elapsed = (Date.now() - startTimeRef.current) / 1000;
                         const rate = current / elapsed;
                         console.log(`Progresso: ${current}/${total} (${rate.toFixed(2)} req/s)`);
                     }
-                }
+                },
+                () => cancelledRef.current // Função para verificar se foi cancelado
             );
 
             setResults(geocodedResults);
@@ -102,10 +113,17 @@ const AutoGeocodingPage = () => {
 
             const elapsed = ((Date.now() - startTimeRef.current) / 1000 / 60).toFixed(1);
 
-            toast({
-                title: '✅ Geocodificação concluída!',
-                description: `${successCount} sucessos, ${failedCount} falhas. Tempo: ${elapsed} min. Baixe o KML agora!`,
-            });
+            if (cancelledRef.current) {
+                toast({
+                    title: '⚠️ Processamento interrompido',
+                    description: `${geocodedResults.length} endereços processados antes da interrupção. Você pode exportar os resultados.`,
+                });
+            } else {
+                toast({
+                    title: '✅ Geocodificação concluída!',
+                    description: `${successCount} sucessos, ${failedCount} falhas. Tempo: ${elapsed} min. Baixe o KML agora!`,
+                });
+            }
         } catch (error) {
             toast({
                 title: 'Erro na geocodificação',
@@ -114,7 +132,18 @@ const AutoGeocodingPage = () => {
             });
         } finally {
             setIsProcessing(false);
+            setIsCancelled(false);
         }
+    };
+
+    const handleStopGeocoding = () => {
+        cancelledRef.current = true;
+        setIsCancelled(true);
+
+        toast({
+            title: '🛑 Parando processamento...',
+            description: 'A geocodificação será interrompida após o endereço atual.',
+        });
     };
 
     const handleExportKML = () => {
@@ -176,6 +205,8 @@ const AutoGeocodingPage = () => {
         setResults([]);
         setProgress({ current: 0, total: 0 });
         setStats({ success: 0, failed: 0, total: 0 });
+        setIsCancelled(false);
+        cancelledRef.current = false;
     };
 
     const estimatedTime = addresses.length > 0
@@ -276,7 +307,7 @@ const AutoGeocodingPage = () => {
                             <Card className="p-6 border-none shadow-brand bg-white">
                                 <div className="flex flex-col gap-4">
                                     <div className="flex flex-wrap gap-4">
-                                        {results.length === 0 ? (
+                                        {results.length === 0 && !isProcessing ? (
                                             <Button
                                                 onClick={handleStartGeocoding}
                                                 disabled={isProcessing}
@@ -285,6 +316,17 @@ const AutoGeocodingPage = () => {
                                             >
                                                 <Play className="w-5 h-5" />
                                                 Geocodificar Agora
+                                            </Button>
+                                        ) : isProcessing ? (
+                                            <Button
+                                                onClick={handleStopGeocoding}
+                                                disabled={isCancelled}
+                                                size="lg"
+                                                variant="destructive"
+                                                className="gap-2 flex-1 min-w-[200px] shadow-lg hover:shadow-xl transition-all"
+                                            >
+                                                <StopCircle className="w-5 h-5" />
+                                                {isCancelled ? 'Parando...' : 'Parar Processamento'}
                                             </Button>
                                         ) : (
                                             <>
@@ -307,16 +349,18 @@ const AutoGeocodingPage = () => {
                                                 </Button>
                                             </>
                                         )}
-                                        <Button
-                                            onClick={handleReset}
-                                            variant="outline"
-                                            size="lg"
-                                            disabled={isProcessing}
-                                            className="gap-2 border-2 hover:bg-muted/50 transition-all"
-                                        >
-                                            <RotateCw className="w-5 h-5" />
-                                            Novo Arquivo
-                                        </Button>
+                                        {!isProcessing && (
+                                            <Button
+                                                onClick={handleReset}
+                                                variant="outline"
+                                                size="lg"
+                                                disabled={isProcessing}
+                                                className="gap-2 border-2 hover:bg-muted/50 transition-all"
+                                            >
+                                                <RotateCw className="w-5 h-5" />
+                                                Novo Arquivo
+                                            </Button>
+                                        )}
                                     </div>
 
                                     {addresses.length > 0 && results.length === 0 && !isProcessing && (
