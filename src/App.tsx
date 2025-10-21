@@ -14,7 +14,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <BrowserRouter basename="/address-to-geo-sheets">
         <Routes>
           <Route path="/" element={<AutoGeocoding />} />
           <Route path="/manual" element={<Index />} />

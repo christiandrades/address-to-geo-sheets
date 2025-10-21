@@ -48,7 +48,7 @@ git push -u origin main
 **Exemplo com usuário "christianandrade":**
 
 ```bash
-git remote add origin https://github.com/christianandrade/address-to-geo-sheets.git
+git remote add origin https://github.com/christianandrades/address-to-geo-sheets.git
 git branch -M main
 git push -u origin main
 ```
@@ -87,7 +87,7 @@ https://SEU_USUARIO.github.io/address-to-geo-sheets/
 **Exemplo:**
 
 ```text
-https://christianandrade.github.io/address-to-geo-sheets/
+https://christianandrades.github.io/address-to-geo-sheets/
 ```
 
 ---
@@ -109,16 +109,16 @@ O deploy será **automático** em ~2 minutos! ✨
 
 ## 🛠️ Comandos Prontos para Copiar
 
-**Se seu usuário GitHub é "christianandrade":**
+**Se seu usuário GitHub é "christianandrades":**
 
 ```bash
 cd "f:\Dev\Projeto UFAL\address-to-geo-sheets"
-git remote add origin https://github.com/christianandrade/address-to-geo-sheets.git
+git remote add origin https://github.com/christianandrades/address-to-geo-sheets.git
 git branch -M main
 git push -u origin main
 ```
 
-**Se seu usuário GitHub é diferente, substitua "christianandrade" pelo seu.**
+**Se seu usuário GitHub é diferente, substitua "christianandrades" pelo seu.**
 
 ---
 
