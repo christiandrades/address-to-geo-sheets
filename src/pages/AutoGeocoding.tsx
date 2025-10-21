@@ -67,6 +67,7 @@ const AutoGeocodingPage = () => {
         setIsCancelled(false);
         cancelledRef.current = false;
         setProgress({ current: 0, total: addresses.length });
+        setResults([]); // Limpa resultados anteriores
         startTimeRef.current = Date.now();
 
         try {
@@ -80,14 +81,18 @@ const AutoGeocodingPage = () => {
                 (current, total, currentResult) => {
                     setProgress({ current, total });
 
-                    // Atualiza estatísticas em tempo real
-                    const successCount = results.filter(r => r.success).length + (currentResult?.success ? 1 : 0);
-                    const failedCount = current - successCount;
-                    setStats({ success: successCount, failed: failedCount, total });
-
                     // Atualiza resultados parciais durante o processamento
                     if (currentResult) {
-                        setResults(prev => [...prev, currentResult]);
+                        setResults(prev => {
+                            const updated = [...prev, currentResult];
+                            
+                            // Calcula estatísticas com base nos resultados atualizados
+                            const successCount = updated.filter(r => r.success).length;
+                            const failedCount = updated.length - successCount;
+                            setStats({ success: successCount, failed: failedCount, total });
+                            
+                            return updated;
+                        });
                     }
 
                     // Log a cada 10 endereços
