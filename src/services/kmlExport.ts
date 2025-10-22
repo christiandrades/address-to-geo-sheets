@@ -155,14 +155,19 @@ function createDescription(result: GeocodingResult, isSuccess: boolean): string 
     html += `<p><strong>CEP:</strong> ${data.CEP || data.cep}</p>`;
   }
 
-  // Dados adicionais
+  // Dados adicionais (LGPD: apenas dados não sensíveis)
   if (data.Nome) {
     html += '<hr style="margin: 10px 0;">';
-    html += `<p><strong>Nome:</strong> ${data.Nome}</p>`;
+    // Mascara o nome para privacidade (exibe apenas iniciais)
+    const nomePartes = data.Nome.split(' ').filter((p: string) => p.length > 0);
+    const nomeMascarado = nomePartes.length > 1
+      ? `${nomePartes[0]} ${nomePartes[nomePartes.length - 1].charAt(0)}.`
+      : nomePartes[0].charAt(0) + '***';
+    html += `<p><strong>Referência:</strong> ${nomeMascarado}</p>`;
   }
-  if (data.CPF) {
-    html += `<p><strong>CPF:</strong> ${data.CPF}</p>`;
-  }
+  // 🔒 REMOVIDO: CPF - Dado sensível (Lei 13.709/2018 - LGPD)
+  // 🔒 REMOVIDO: CNS - Dado sensível
+
   if (data.Comorbidade) {
     html += `<p><strong>Comorbidade:</strong> ${data.Comorbidade}</p>`;
   }

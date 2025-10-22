@@ -13,7 +13,7 @@ const geocodeWithNominatim = async (address: string): Promise<GeocodingResult | 
     });
 
     const response = await fetch(`https://nominatim.openstreetmap.org/search?${params}`, {
-      headers: { 'User-Agent': 'HealthGeocoder/1.0' }
+      headers: { 'User-Agent': 'GeoSaude/2.0 (UFAL - Universidade Federal de Alagoas; contato: github.com/christiandrades/geosaude)' }
     });
 
     if (!response.ok) return null;

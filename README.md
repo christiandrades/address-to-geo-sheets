@@ -1,6 +1,10 @@
-# 🗺️ Geocodificação Automática com HERE API
+# 🗺️ GeoSaúde - Sistema de Geocodificação Automática
 
 Sistema completo de geocodificação de endereços em lote, com conversão automática para KML compatível com Google Earth.
+
+> **🔒 IMPORTANTE - SEGURANÇA**  
+> Antes de usar, leia [SECURITY.md](./SECURITY.md) para configuração segura da API key.  
+> **NUNCA** commite arquivos `.env` com chaves reais!
 
 ## ✨ Características
 
@@ -23,18 +27,27 @@ Sistema completo de geocodificação de endereços em lote, com conversão autom
 
 ```bash
 # Clone o repositório
-git clone <URL_DO_REPO>
-cd address-to-geo-sheets
+git clone https://github.com/christiandrades/geosaude.git
+cd geosaude
 
 # Instale dependências
 npm install
+
+# Configure a API key (OBRIGATÓRIO)
+cp .env.example .env
+# Edite .env e adicione sua HERE API key
 
 # Execute em desenvolvimento
 npm run dev
 
 # Build para produção
 npm run build
+
+# Deploy para GitHub Pages
+npm run deploy
 ```
+
+**⚠️ CRÍTICO**: Sem o arquivo `.env` configurado, a aplicação não funcionará!
 
 ### Acesse
 

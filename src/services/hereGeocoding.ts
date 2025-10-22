@@ -1,17 +1,27 @@
 import { GeocodingResult } from '@/types/patient';
+import { fetchWithRetry, TokenBucket } from '@/lib/resilience';
 
-// HERE API Key
-const HERE_API_KEY = 'scjJzHjgoa1K-e2vAO-iu6hQveH-Vpg_8ii0PBTcjFc';
+// HERE API Key - DEVE ser definida no .env como VITE_HERE_API_KEY
+const HERE_API_KEY = import.meta.env.VITE_HERE_API_KEY;
 
-// Rate limit: 5 requisições por segundo
-const RATE_LIMIT = 5;
-const DELAY_MS = 1000 / RATE_LIMIT; // 200ms entre requisições
+// Validação crítica da chave API
+if (!HERE_API_KEY) {
+    throw new Error(
+        '🔒 ERRO CRÍTICO: HERE API key não encontrada!\n' +
+        'Defina VITE_HERE_API_KEY no arquivo .env\n' +
+        'Copie .env.example para .env e adicione sua chave.'
+    );
+}
 
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+// Rate limit: 5 requisições por segundo com Token Bucket
+const rateLimiter = new TokenBucket(5, 5); // 5 tokens, recarrega 5/segundo
 
-// Geocodificação com HERE API
+// Geocodificação com HERE API (com retry inteligente e rate limiting)
 export const geocodeWithHere = async (address: string): Promise<GeocodingResult | null> => {
     try {
+        // Aguarda token do rate limiter antes de fazer requisição
+        await rateLimiter.consume();
+
         const params = new URLSearchParams({
             q: address,
             apiKey: HERE_API_KEY,
@@ -19,20 +29,16 @@ export const geocodeWithHere = async (address: string): Promise<GeocodingResult 
             limit: '1'
         });
 
-        const response = await fetch(`https://geocode.search.hereapi.com/v1/geocode?${params}`);
-
-        if (!response.ok) {
-            console.error(`HERE API error (${response.status}):`, response.statusText);
-
-            // Retry em caso de rate limit
-            if (response.status === 429) {
-                console.log('Rate limit atingido, aguardando 1 segundo...');
-                await delay(1000);
-                return geocodeWithHere(address); // Retry
+        // Usa fetchWithRetry para retry automático com backoff exponencial
+        const response = await fetchWithRetry(
+            `https://geocode.search.hereapi.com/v1/geocode?${params}`,
+            undefined,
+            {
+                maxRetries: 3,
+                initialDelay: 500,
+                retryableStatuses: [429, 500, 502, 503, 504]
             }
-
-            return null;
-        }
+        );
 
         const data = await response.json();
 
@@ -135,10 +141,7 @@ export const geocodeBatchHere = async (
             onProgress(i + 1, total, results[results.length - 1]);
         }
 
-        // Rate limiting: aguarda antes da próxima requisição
-        if (i < addresses.length - 1) {
-            await delay(DELAY_MS);
-        }
+        // Rate limiting é gerenciado pelo TokenBucket no geocodeWithHere
     }
 
     console.log(`Geocodificação concluída! Sucessos: ${results.filter(r => r.success).length}/${total}`);

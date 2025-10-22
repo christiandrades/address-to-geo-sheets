@@ -23,9 +23,9 @@ export const geocodeAddress = async (
       'Brasil',
       cep
     ].filter(Boolean);
-    
+
     const address = addressParts.join(', ');
-    
+
     // Make request to Nominatim
     const params = new URLSearchParams({
       q: address,
@@ -36,7 +36,7 @@ export const geocodeAddress = async (
 
     const response = await fetch(`${NOMINATIM_API}?${params}`, {
       headers: {
-        'User-Agent': 'HealthGeocoder/1.0'
+        'User-Agent': 'GeoSaude/2.0 (UFAL - Universidade Federal de Alagoas; contato: github.com/christiandrades/geosaude)'
       }
     });
 
@@ -45,7 +45,7 @@ export const geocodeAddress = async (
     }
 
     const data = await response.json();
-    
+
     if (data && data.length > 0) {
       return {
         lat: parseFloat(data[0].lat),
@@ -73,7 +73,7 @@ export const geocodeBatch = async (
   onProgress?: (current: number, total: number) => void
 ): Promise<Array<GeocodingResult | null>> => {
   const results: Array<GeocodingResult | null> = [];
-  
+
   for (let i = 0; i < addresses.length; i++) {
     const addr = addresses[i];
     const result = await geocodeAddress(
@@ -84,18 +84,18 @@ export const geocodeBatch = async (
       addr.uf,
       addr.cep
     );
-    
+
     results.push(result);
-    
+
     if (onProgress) {
       onProgress(i + 1, addresses.length);
     }
-    
+
     // Rate limiting: wait 1.1 seconds between requests
     if (i < addresses.length - 1) {
       await delay(1100);
     }
   }
-  
+
   return results;
 };
