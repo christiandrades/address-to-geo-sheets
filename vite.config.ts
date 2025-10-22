@@ -4,8 +4,8 @@ import path from "path";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  // Use '/geosaude/' para GitHub Pages, '/' para Vercel
-  base: mode === 'production' && process.env.VERCEL !== '1' ? '/geosaude/' : '/',
+  // Base path: '/' para Vercel e dev, '/geosaude/' para GitHub Pages
+  base: '/',
   server: {
     host: "::",
     port: 8080,
