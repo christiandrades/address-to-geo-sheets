@@ -30,18 +30,8 @@ export default async function handler(req, res) {
             });
         }
 
-        // Parse do body (Edge Runtime requer parsing manual)
-        let body;
-        try {
-            const text = await req.text();
-            body = JSON.parse(text);
-        } catch (e) {
-            return res.status(400).json({
-                error: 'JSON inválido no body'
-            });
-        }
-
-        const { addresses, maxResults = 10 } = body;
+        // Pega do body (Vercel parseia automaticamente em Node.js runtime)
+        const { addresses, maxResults = 10 } = req.body || {};
 
         // Validações
         if (!Array.isArray(addresses)) {
@@ -133,7 +123,7 @@ export default async function handler(req, res) {
 }
 
 export const config = {
-    runtime: 'edge',
+    runtime: 'nodejs',
     regions: ['gru1'],
     maxDuration: 30, // 30 segundos (tempo suficiente para ~150 endereços)
 };

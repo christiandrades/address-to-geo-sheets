@@ -36,20 +36,8 @@ export default async function handler(req, res) {
             });
         }
 
-        // Parse do body (Edge Runtime requer parsing manual)
-        let body;
-        try {
-            const text = await req.text();
-            body = JSON.parse(text);
-        } catch (e) {
-            return res.status(400).json({
-                error: 'JSON inválido no body',
-                hint: 'Envie { "address": "seu endereço aqui" }'
-            });
-        }
-
-        // Pega o endereço do body
-        const { address } = body;
+        // Pega o endereço do body (Vercel parseia automaticamente em Node.js runtime)
+        const { address } = req.body || {};
 
         if (!address || typeof address !== 'string') {
             return res.status(400).json({
@@ -131,8 +119,8 @@ export default async function handler(req, res) {
     }
 }
 
-// Configuração do Vercel
+// Configuração do Vercel - usando Node.js runtime
 export const config = {
-    runtime: 'edge', // Usa Vercel Edge Functions (mais rápido)
+    runtime: 'nodejs',
     regions: ['gru1'], // São Paulo (mais próximo de Alagoas)
 };
