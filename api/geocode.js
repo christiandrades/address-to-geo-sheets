@@ -36,8 +36,20 @@ export default async function handler(req, res) {
             });
         }
 
+        // Parse do body (Edge Runtime requer parsing manual)
+        let body;
+        try {
+            const text = await req.text();
+            body = JSON.parse(text);
+        } catch (e) {
+            return res.status(400).json({
+                error: 'JSON inválido no body',
+                hint: 'Envie { "address": "seu endereço aqui" }'
+            });
+        }
+
         // Pega o endereço do body
-        const { address } = req.body;
+        const { address } = body;
 
         if (!address || typeof address !== 'string') {
             return res.status(400).json({

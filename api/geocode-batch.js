@@ -30,7 +30,18 @@ export default async function handler(req, res) {
             });
         }
 
-        const { addresses, maxResults = 10 } = req.body;
+        // Parse do body (Edge Runtime requer parsing manual)
+        let body;
+        try {
+            const text = await req.text();
+            body = JSON.parse(text);
+        } catch (e) {
+            return res.status(400).json({
+                error: 'JSON inválido no body'
+            });
+        }
+
+        const { addresses, maxResults = 10 } = body;
 
         // Validações
         if (!Array.isArray(addresses)) {
