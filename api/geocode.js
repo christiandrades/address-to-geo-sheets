@@ -1,43 +1,32 @@
 /**
  * Vercel Serverless Function - Proxy para HERE Geocoding API
- * 
- * Esta função protege a API key no servidor e fornece
- * um endpoint seguro para o frontend chamar.
- * 
- * Deploy: Vercel detecta automaticamente este arquivo
- * URL: https://seu-projeto.vercel.app/api/geocode
  */
 
 export default async function handler(req, res) {
-    // CORS Headers para permitir chamadas do frontend
+    // CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-    // Handle preflight
     if (req.method === 'OPTIONS') {
         return res.status(200).end();
     }
 
-    // Apenas POST permitido
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
     try {
-        // Chave API protegida no servidor (variável de ambiente do Vercel)
         const HERE_API_KEY = process.env.HERE_API_KEY;
 
         if (!HERE_API_KEY) {
-            console.error('🔒 HERE_API_KEY não configurada no Vercel');
             return res.status(500).json({
-                error: 'API key não configurada no servidor',
-                hint: 'Configure HERE_API_KEY nas variáveis de ambiente do Vercel'
+                error: 'API key não configurada'
             });
         }
 
-        // Pega o endereço do body (Vercel parseia automaticamente em Node.js runtime)
-        const { address } = req.body || {};
+        // Vercel parseia JSON automaticamente para req.body
+        const { address } = req.body;
 
         if (!address || typeof address !== 'string') {
             return res.status(400).json({
@@ -46,16 +35,11 @@ export default async function handler(req, res) {
             });
         }
 
-        // Validação de tamanho (previne abuso)
         if (address.length > 500) {
             return res.status(400).json({
                 error: 'Endereço muito longo (max: 500 caracteres)'
             });
         }
-
-        // Rate limiting básico por IP (opcional, melhor usar Vercel Edge Config)
-        const clientIP = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-        console.log(`📍 Geocoding request from IP: ${clientIP}`);
 
         // Chama HERE API
         const params = new URLSearchParams({
@@ -66,27 +50,17 @@ export default async function handler(req, res) {
         });
 
         const hereResponse = await fetch(
-            `https://geocode.search.hereapi.com/v1/geocode?${params}`,
-            {
-                headers: {
-                    'User-Agent': 'GeoSaude-Backend/2.1 (UFAL)'
-                }
-            }
+            `https://geocode.search.hereapi.com/v1/geocode?${params}`
         );
 
         if (!hereResponse.ok) {
-            console.error(`❌ HERE API error: ${hereResponse.status}`);
-
-            // Não expõe detalhes da API para o cliente
-            return res.status(hereResponse.status).json({
-                error: 'Erro ao geocodificar',
-                status: hereResponse.status
+            return res.status(502).json({
+                error: 'Erro ao geocodificar'
             });
         }
 
         const data = await hereResponse.json();
 
-        // Retorna apenas dados necessários (não expõe response completo)
         if (data.items && data.items.length > 0) {
             const result = data.items[0];
 
@@ -95,12 +69,10 @@ export default async function handler(req, res) {
                 lat: result.position.lat,
                 lon: result.position.lng,
                 display_name: result.title || result.address?.label,
-                matchLevel: result.resultType || 'unknown',
-                fullAddress: result.address
+                matchLevel: result.resultType || 'unknown'
             });
         }
 
-        // Nenhum resultado encontrado
         return res.status(200).json({
             success: false,
             lat: 0,
@@ -110,17 +82,10 @@ export default async function handler(req, res) {
         });
 
     } catch (error) {
-        console.error('❌ Server error:', error);
+        console.error('Error:', error);
 
         return res.status(500).json({
-            error: 'Erro interno do servidor',
-            message: error.message
+            error: 'Erro interno do servidor'
         });
     }
 }
-
-// Configuração do Vercel - usando Node.js runtime
-export const config = {
-    runtime: 'nodejs',
-    regions: ['gru1'], // São Paulo (mais próximo de Alagoas)
-};
