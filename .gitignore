@@ -21,6 +21,10 @@ dist-ssr
 .env.*.local
 *.local
 
+# Test files with API keys (NUNCA VERSIONAR)
+test-api.js
+test-*.js
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
